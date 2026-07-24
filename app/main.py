@@ -59,7 +59,11 @@ app = FastAPI(
     openapi_tags=tags_metadata,
 )
 
+print("Creating database tables...")
+
 Base.metadata.create_all(bind=engine)
+
+print("Database tables created successfully!")
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
