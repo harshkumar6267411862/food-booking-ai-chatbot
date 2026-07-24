@@ -11,7 +11,7 @@ from app.database import Base
 
 if TYPE_CHECKING:
     from app.models.order import Order
-    from app.models.menu import MenuItem
+    from app.models.menu_item import MenuItem
 
 
 class OrderItem(Base):

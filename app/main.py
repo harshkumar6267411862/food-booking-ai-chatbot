@@ -1,23 +1,115 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.database import Base, engine
 from app.models import *
 
-Base.metadata.create_all(bind=engine)
+from app.api.auth import router as auth_router
+from app.api.user import router as user_router
+from app.api.pickup_slot import router as pickup_router
+from app.api import admin_pickup_slots
+from app.api import menu_item, orders, admin_orders, stall, webhook
+
+
+# Base.metadata.create_all(bind=engine)
+
+tags_metadata = [
+    {
+        "name": "Auth",
+        "description": "Authentication and registration.",
+    },
+    {
+        "name": "Users",
+        "description": "User profile management.",
+    },
+    {
+        "name": "Food Stalls",
+        "description": "View food stalls.",
+    },
+    {
+        "name": "Menu Items",
+        "description": "Manage and view menu items.",
+    },
+    {
+        "name": "Orders",
+        "description": "Student order management.",
+    },
+    {
+        "name": "Admin Orders",
+        "description": "Admin workflow for managing orders.",
+    },
+    {
+        "name": "Pickup Slots",
+        "description": "Manage pickup slots for order distribution.",
+    },
+    {
+        "name": "WhatsApp Webhook",
+        "description": "Receive and respond to WhatsApp messages.",
+    },
+]
 
 app = FastAPI(
-    title="Food Pre-Booking chatbot",
-    version="1.0.0"
+    title="MunchBot API",
+    description="This API powers MunchBot — the WhatsApp-based canteen food pre-ordering system.",
+    version="1.0.0",
+    openapi_tags=tags_metadata,
 )
+
+# ── CORS ──────────────────────────────────────────────────────────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # Tighten this in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    details = exc.errors()
+    error_msg = {"error": {"message": "Validation Error", "details": details}}
+    return JSONResponse(status_code=422, content=error_msg)
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    error_msg = {"error": {"message": exc.detail}}
+    return JSONResponse(status_code=exc.status_code, content=error_msg)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    error_msg = {"error": {"message": "An internal server error occurred."}}
+    # In production, log the exception here
+    return JSONResponse(status_code=500, content=error_msg)
+
+app.include_router(auth_router)
+app.include_router(user_router)
+app.include_router(pickup_router)
+app.include_router(stall.router)
+app.include_router(menu_item.router)
+app.include_router(orders.router)
+app.include_router(admin_orders.router)
+app.include_router(webhook.router)
+app.include_router(admin_pickup_slots.router)
 
 @app.get("/")
 def root():
-    return {
-        "message": "Welcome to Smart WhatsApp AI Chatbot API"
-    }
+    return RedirectResponse(url="/admin-dashboard/login.html")
 
 @app.get("/health")
 def health_check():
     return {
-        "status": "healthy"
+        "status": "healthy",
+        "app": "MunchBot API",
     }
+
+# ── Serve Admin Frontend ───────────────────────────────────────────────────────
+# Mount AFTER all API routes so API routes take priority
+app.mount(
+    "/admin-dashboard",
+    StaticFiles(directory="frontend", html=True),
+    name="admin-dashboard",
+)

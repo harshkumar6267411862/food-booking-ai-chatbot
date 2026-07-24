@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-#BaseSettings automaticcaly read values from environment variables..
+
 
 class Settings(BaseSettings):
     DATABASE_USER: str
@@ -12,10 +12,28 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
+    # WhatsApp Integration Config
+    WHATSAPP_VERIFY_TOKEN: str = "munchbot_secret_token"
+    WHATSAPP_TOKEN: str = ""
+    WHATSAPP_PHONE_NUMBER_ID: str = ""
+    WHATSAPP_PROVIDER: str = "mock"  # "mock", "meta", or "twilio"
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_PHONE_NUMBER: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
-        extra="ignore" #pydantic ignores unknown variables...
+        extra="ignore"
     )
+
+    @property
+    def DATABASE_URL(self) -> str:
+        return (
+            f"postgresql+psycopg2://"
+            f"{self.DATABASE_USER}:{self.DATABASE_PASSWORD}"
+            f"@{self.DATABASE_HOST}:{self.DATABASE_PORT}"
+            f"/{self.DATABASE_NAME}"
+        )
 
 
 settings = Settings()

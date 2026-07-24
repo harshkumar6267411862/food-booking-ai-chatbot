@@ -6,14 +6,9 @@ from app.config import settings
 from typing import Generator
 
 
-DATABASE_URL = (
-    f"postgresql+psycopg2://"
-    f"{settings.DATABASE_USER}:"
-    f"{settings.DATABASE_PASSWORD}@"
-    f"{settings.DATABASE_HOST}:"
-    f"{settings.DATABASE_PORT}/"
-    f"{settings.DATABASE_NAME}"
-)
+from app.config import settings
+
+DATABASE_URL = settings.DATABASE_URL
 
 
 engine = create_engine(

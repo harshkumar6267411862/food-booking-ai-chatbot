@@ -8,23 +8,27 @@ from typing import TYPE_CHECKING
 from app.database import Base
 from app.enums.user_role import UserRole
 
+
+
 if TYPE_CHECKING:
     from app.models.order import Order
+    from app.models.user_session import UserSession
+    from app.models.cart import Cart
 
 class User(Base):
     __tablename__ = "users"
     
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     
-    registration_number: Mapped[str] = mapped_column(
+    registration_number: Mapped[str | None] = mapped_column(
         String(20),
         unique=True,
-        nullable=False
+        nullable=True
     )
     
-    name: Mapped[str] = mapped_column(
+    name: Mapped[str | None] = mapped_column(
         String(100),
-        nullable=False
+        nullable=True
     )
     
     email: Mapped[str] = mapped_column(
@@ -39,9 +43,9 @@ class User(Base):
         nullable=False    
     )
     
-    password_hash: Mapped[str] = mapped_column(
+    password_hash: Mapped[str | None] = mapped_column(
         String(255),
-        nullable=False
+        nullable=True
     )
     
     role: Mapped[UserRole] = mapped_column(
@@ -69,4 +73,12 @@ class User(Base):
     orders: Mapped[list["Order"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan"
+    )
+    
+    cart: Mapped["Cart | None"] = relationship(
+        back_populates="user",
+    )
+    session: Mapped["UserSession"] = relationship(
+        back_populates="user",
+        uselist=False,
     )

@@ -13,6 +13,7 @@ from app.enums.menu_category import MenuCategory
 if TYPE_CHECKING:
     from app.models.stall import FoodStall
     from app.models.order_item import OrderItem
+    from app.models.cart_item import CartItem
     
     
 class MenuItem(Base):
@@ -72,11 +73,12 @@ class MenuItem(Base):
     food_stall: Mapped[FoodStall] = relationship(
         back_populates="menu_items"
     )
-    
-    image_url: Mapped[str | None] = mapped_column(
-    String(500),
-    nullable=True
+    menu_section: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
     )
+    
+    cart_items: Mapped[list["CartItem"]] = relationship()
     
     order_items: Mapped[list[OrderItem]] = relationship(
     back_populates="menu_item"

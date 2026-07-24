@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column,relationship
 
 from app.database import Base
 from app.enums.order_status import OrderStatus
+from app.enums.cancelled_by import CancelledBy
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -69,10 +70,40 @@ class Order(Base):
         onupdate=datetime.utcnow
     )
     
+    accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    preparing_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    ready_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    cancelled_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    
     cancel_reason: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True
     ) 
+    
+    cancelled_by: Mapped[CancelledBy | None] = mapped_column(
+        SQLEnum(CancelledBy),
+        nullable=True,
+    )
     
     user: Mapped[User] = relationship(
         back_populates="orders"
@@ -85,4 +116,19 @@ class Order(Base):
     order_items: Mapped[list[OrderItem]] = relationship(
         back_populates="order",
         cascade="all, delete-orphan"
+    )
+    
+    pickup_otp_hash: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+    
+    otp_generated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    
+    otp_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
     )

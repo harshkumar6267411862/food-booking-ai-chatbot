@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — MunchBot Admin</title>
+  <meta name="description" content="MunchBot Admin Panel Login" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>" />
+</head>
+<body class="login-page">
+  <div class="bg-mesh"></div>
+
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">🍔</div>
+      <div class="logo-text">
+        <span class="munch">Munch</span><span class="bot">Bot</span>
+      </div>
+    </div>
+
+    <h1 class="login-title">Admin Portal</h1>
+    <p class="login-subtitle">Sign in to manage orders from the canteen dashboard.</p>
+
+    <form id="loginForm" novalidate>
+      <div class="form-group">
+        <label for="reg_number">Registration Number</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🪪</span>
+          <input
+            type="text"
+            id="reg_number"
+            name="reg_number"
+            placeholder="e.g. AD483921"
+            autocomplete="username"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔑</span>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="loginBtn">
+        Sign In
+      </button>
+
+      <div class="login-error" id="loginError"></div>
+    </form>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Redirect if already logged in
+    if (Auth.isLoggedIn()) {
+      window.location.href = "/admin-dashboard/index.html";
+    }
+
+    const form    = document.getElementById("loginForm");
+    const btn     = document.getElementById("loginBtn");
+    const errBox  = document.getElementById("loginError");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errBox.classList.remove("show");
+
+      const regNum = document.getElementById("reg_number").value.trim();
+      const pass   = document.getElementById("password").value;
+
+      if (!regNum || !pass) {
+        errBox.textContent = "Please fill in all fields.";
+        errBox.classList.add("show");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Signing in…";
+
+      try {
+        const data = await API.login(regNum, pass);
+        Auth.setToken(data.access_token);
+
+        // Fetch admin name
+        try {
+          const me = await API.me();
+          Auth.setAdminName(me.name || "Admin");
+        } catch (_) {}
+
+        window.location.href = "/admin-dashboard/index.html";
+      } catch (err) {
+        errBox.textContent = err.message || "Invalid credentials. Please try again.";
+        errBox.classList.add("show");
+        btn.disabled = false;
+        btn.textContent = "Sign In";
+      }
+    });
+  </script>
+</body>
+</html>

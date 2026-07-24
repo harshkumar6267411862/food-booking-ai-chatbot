@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MunchBot — Admin Dashboard</title>
+  <meta name="description" content="MunchBot Admin Order Management Dashboard" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>" />
+</head>
+<body class="dashboard-page">
+  <div class="bg-mesh"></div>
+
+  <!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
+  <nav class="navbar">
+    <a class="nav-brand" href="#">
+      <div class="logo-icon">🍔</div>
+      <div class="brand-name">
+        <span class="munch">Munch</span><span class="bot">Bot</span>
+      </div>
+    </a>
+
+    <div class="nav-right">
+      <div class="nav-status">
+        <span class="status-dot"></span>
+        Live
+      </div>
+      <div class="nav-admin">
+        <div class="avatar" id="adminInitial">A</div>
+        <span id="adminName">Admin</span>
+      </div>
+      <button class="btn-logout" id="logoutBtn">Sign out</button>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════ OPERATIONS PANEL ═══════════════════════ -->
+<section class="operations-panel">
+
+  <div class="operations-left">
+
+    <div class="operations-title">
+      🍽️ Today's Operations
+    </div>
+
+    <div class="operations-date">
+      <strong>Date:</strong>
+      <span id="todayDate">--</span>
+    </div>
+
+  </div>
+
+  <div class="operations-right">
+
+    <button
+      class="btn-operation generate"
+      id="generateSlotsBtn">
+
+      ⚡ Generate Today's Slots
+
+    </button>
+
+    <button
+      class="btn-operation open"
+      id="openCafeteriaBtn">
+
+      🟢 Open Cafeteria
+
+    </button>
+
+    <button
+      class="btn-operation close"
+      id="closeCafeteriaBtn">
+
+      🔴 Close Cafeteria
+
+    </button>
+
+  </div>
+
+</section>
+
+  <!-- ═══════════════════════ STATS BAR ═══════════════════════ -->
+  <section class="stats-bar" aria-label="Order statistics">
+    <div class="stat-card">
+      <div class="stat-icon pending">⏳</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-PENDING">—</div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon confirmed">✅</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-CONFIRMED">—</div>
+        <div class="stat-label">Confirmed</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon preparing">🔥</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-PREPARING">—</div>
+        <div class="stat-label">Preparing</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon ready">🔔</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-READY">—</div>
+        <div class="stat-label">Ready for Pickup</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ REFRESH BAR ═══════════════════════ -->
+  <div class="refresh-bar">
+    <div class="refresh-info">
+      🕐 Last updated: <strong id="lastUpdated">—</strong> &nbsp;·&nbsp; Auto-refreshes every 30s
+    </div>
+    <button class="btn-refresh" id="refreshBtn">
+      <span class="refresh-icon">↻</span> Refresh
+    </button>
+  </div>
+
+  <!-- ═══════════════════════ KANBAN BOARD ═══════════════════════ -->
+  <main class="board-wrapper" aria-label="Order Kanban Board">
+    <div class="kanban-board">
+
+      <!-- PENDING column -->
+      <div class="kanban-col">
+        <div class="col-header">
+          <div class="col-title-group">
+            <span class="col-dot pending"></span>
+            <span class="col-title">Pending</span>
+          </div>
+          <span class="col-count" id="cnt-PENDING">0</span>
+        </div>
+        <div class="col-body" id="col-PENDING"></div>
+      </div>
+
+      <!-- CONFIRMED column -->
+      <div class="kanban-col">
+        <div class="col-header">
+          <div class="col-title-group">
+            <span class="col-dot confirmed"></span>
+            <span class="col-title">Confirmed</span>
+          </div>
+          <span class="col-count" id="cnt-CONFIRMED">0</span>
+        </div>
+        <div class="col-body" id="col-CONFIRMED"></div>
+      </div>
+
+      <!-- PREPARING column -->
+      <div class="kanban-col">
+        <div class="col-header">
+          <div class="col-title-group">
+            <span class="col-dot preparing"></span>
+            <span class="col-title">Preparing</span>
+          </div>
+          <span class="col-count" id="cnt-PREPARING">0</span>
+        </div>
+        <div class="col-body" id="col-PREPARING"></div>
+      </div>
+
+      <!-- READY column -->
+      <div class="kanban-col">
+        <div class="col-header">
+          <div class="col-title-group">
+            <span class="col-dot ready"></span>
+            <span class="col-title">Ready for Pickup</span>
+          </div>
+          <span class="col-count" id="cnt-READY">0</span>
+        </div>
+        <div class="col-body" id="col-READY"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ═══════════════════════ OTP MODAL ═══════════════════════ -->
+  <div class="modal-overlay hidden" id="otpModal" role="dialog" aria-modal="true" aria-labelledby="otpTitle">
+    <div class="modal-card">
+      <h2 class="modal-title" id="otpTitle">🔑 Verify Student OTP</h2>
+      <p class="modal-sub">
+        Enter the 6-digit OTP provided by the student for order
+        <strong id="otpOrderNum"></strong>.
+      </p>
+
+      <div class="otp-input-group">
+        <input class="otp-digit" id="otp1" type="text" inputmode="numeric" maxlength="1" placeholder="·" aria-label="OTP digit 1" />
+        <input class="otp-digit" id="otp2" type="text" inputmode="numeric" maxlength="1" placeholder="·" aria-label="OTP digit 2" />
+        <input class="otp-digit" id="otp3" type="text" inputmode="numeric" maxlength="1" placeholder="·" aria-label="OTP digit 3" />
+        <input class="otp-digit" id="otp4" type="text" inputmode="numeric" maxlength="1" placeholder="·" aria-label="OTP digit 4" />
+        <input class="otp-digit" id="otp5" type="text" inputmode="numeric" maxlength="1" placeholder="·" aria-label="OTP digit 5" />
+        <input class="otp-digit" id="otp6" type="text" inputmode="numeric" maxlength="1" placeholder="·" aria-label="OTP digit 6" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" id="otpCancelBtn">Cancel</button>
+        <button class="btn-primary-modal" id="otpSubmitBtn">Complete Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ CANCEL MODAL ═══════════════════════ -->
+  <div class="modal-overlay hidden" id="cancelModal" role="dialog" aria-modal="true" aria-labelledby="cancelTitle">
+    <div class="modal-card">
+      <h2 class="modal-title" id="cancelTitle">⚠️ Cancel Order</h2>
+      <p class="modal-sub">
+        You are about to cancel order <strong id="cancelOrderNum"></strong>.
+        Please provide a reason — this will be recorded and shown to the student.
+      </p>
+      <textarea
+        class="form-textarea"
+        id="cancelReason"
+        placeholder="e.g. Item unavailable due to ingredient shortage…"
+        rows="4"
+      ></textarea>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancelCancelBtn">Go Back</button>
+        <button class="btn-primary-modal" id="cancelSubmitBtn"
+          style="background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 4px 15px rgba(239,68,68,0.3);">
+          Cancel Order
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ TOAST CONTAINER ═══════════════════════ -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

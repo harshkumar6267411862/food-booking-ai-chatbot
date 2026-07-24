@@ -47,6 +47,10 @@ class PickupSlot(Base):
         default=True
     )
 
+    @property
+    def available(self) -> bool:
+        return self.is_active and self.current_orders < self.max_orders
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow

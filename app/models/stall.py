@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column,relationship
 from app.database import Base
 
 if TYPE_CHECKING:
-    from app.models.menu import MenuItem
+    from app.models.menu_item import MenuItem
 
 
 class FoodStall(Base):
