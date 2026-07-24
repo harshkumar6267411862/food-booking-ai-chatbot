@@ -15,8 +15,8 @@ from app.models.pickup_slot import PickupSlot
 from app.models.user import User
 from app.enums.user_role import UserRole
 
-CAFETERIA_OPENING_TIME = time(hour=7, minute=0)
-CAFETERIA_CLOSING_TIME = time(hour=23, minute=0)
+CAFETERIA_OPENING_TIME = time(hour=12, minute=0)
+CAFETERIA_CLOSING_TIME = time(hour=24, minute=0)
 PREPARATION_BUFFER = timedelta(minutes=15)
 DEFAULT_SLOT_INTERVAL = 15
 DEFAULT_MAX_ORDERS = 30
