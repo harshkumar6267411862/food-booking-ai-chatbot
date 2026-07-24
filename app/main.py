@@ -65,6 +65,27 @@ Base.metadata.create_all(bind=engine)
 
 print("Database tables created successfully!")
 
+from app.database import SessionLocal
+from app.models.user import User
+from app.enums.user_role import UserRole
+from app.utils.security import hash_password
+
+db = SessionLocal()
+
+if not db.query(User).filter(User.email == "admin@test.com").first():
+    admin = User(
+        registration_number="AD000001",
+        name="Admin",
+        email="admin@test.com",
+        phone_number="9999999999",
+        password_hash=hash_password("Admin@123"),
+        role=UserRole.ADMIN,
+    )
+    db.add(admin)
+    db.commit()
+
+db.close()
+
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
