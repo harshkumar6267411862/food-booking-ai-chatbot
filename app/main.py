@@ -59,6 +59,8 @@ app = FastAPI(
     openapi_tags=tags_metadata,
 )
 
+Base.metadata.create_all(bind=engine)
+
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
