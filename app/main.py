@@ -66,34 +66,43 @@ Base.metadata.create_all(bind=engine)
 
 print("Database tables created successfully!")
 
+# Automatically apply Alembic migrations for existing tables
+try:
+    from alembic.config import Config
+    from alembic import command
+    alembic_cfg = Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
+    print("Database migrations applied successfully!")
+except Exception as e:
+    print(f"Database migration note: {e}")
+
 from app.database import SessionLocal
 from app.models.user import User
 from app.enums.user_role import UserRole
 from app.utils.security import hash_password
 
-
-db = SessionLocal()
-
-if not db.query(User).filter(User.email == "admin@test.com").first():
-    admin = User(
-        registration_number="AD000001",
-        name="Admin",
-        email="admin@test.com",
-        phone_number="9999999999",
-        password_hash=hash_password("Admin@123"),
-        role=UserRole.ADMIN,
-        profile_complete=True,
-    )
-    db.add(admin)
-    db.commit()
-else:
-    # Ensure existing seeded admin has profile_complete=True
-    seeded = db.query(User).filter(User.email == "admin@test.com").first()
-    if seeded and not seeded.profile_complete:
-        seeded.profile_complete = True
+try:
+    db = SessionLocal()
+    if not db.query(User).filter(User.email == "admin@test.com").first():
+        admin = User(
+            registration_number="AD000001",
+            name="Admin",
+            email="admin@test.com",
+            phone_number="9999999999",
+            password_hash=hash_password("Admin@123"),
+            role=UserRole.ADMIN,
+            profile_complete=True,
+        )
+        db.add(admin)
         db.commit()
-
-db.close()
+    else:
+        seeded = db.query(User).filter(User.email == "admin@test.com").first()
+        if seeded and not seeded.profile_complete:
+            seeded.profile_complete = True
+            db.commit()
+    db.close()
+except Exception as e:
+    print(f"Error seeding admin user: {e}")
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
