@@ -202,7 +202,17 @@ def handle_whatsapp_message(
         "RESTART",
     ]:
         reset_session(db, session)
-    
+
+        # New users (no name yet) must go through onboarding first
+        if not user.name or not user.registration_number:
+            update_chat_state(db, session, ChatState.WAITING_FOR_NAME)
+            return (
+                "👋 Welcome to *MunchBot*! 🍕\n\n"
+                "I'm your food ordering assistant.\n\n"
+                "Before we begin...\n\n"
+                "😊 What's your name?"
+            )
+
         return handle_selecting_stall(
             db,
             user,
@@ -409,13 +419,12 @@ def handle_selecting_stall(
     text: str,
 ) -> str:
 
-    stalls = get_stalls(
-        db,
-        only_open=True,
-    )
+    # Fetch ALL stalls — don't silently return nothing when stalls are closed.
+    # Users deserve to see what's available (with hours) even outside opening times.
+    stalls = get_stalls(db, only_open=False)
 
     if not stalls:
-        return "⚠️ No food stalls are currently open."
+        return "⚠️ No food stalls are available at this time. Please try again later."
 
     # User has not selected a stall yet
     if session.selected_stall_id is None:
@@ -431,7 +440,10 @@ def handle_selecting_stall(
             )
 
             for stall in stalls:
-                response += f"{stall.id}. {stall.name}\n"
+                open_str  = stall.opening_time.strftime("%I:%M %p") if stall.opening_time else "--"
+                close_str = stall.closing_time.strftime("%I:%M %p") if stall.closing_time else "--"
+                status = "🟢" if is_stall_open(stall) else "🔴"
+                response += f"{status} {stall.id}. {stall.name} ({open_str}–{close_str})\n"
 
             response += "\nReply with the stall number."
 
@@ -442,10 +454,19 @@ def handle_selecting_stall(
             int(text),
         )
 
-        if not stall or not is_stall_open(stall):
+        if not stall:
             return (
                 "❌ Invalid stall number.\n\n"
                 "Please choose one of the available stalls."
+            )
+
+        if not is_stall_open(stall):
+            open_str  = stall.opening_time.strftime("%I:%M %p") if stall.opening_time else "--"
+            close_str = stall.closing_time.strftime("%I:%M %p") if stall.closing_time else "--"
+            return (
+                f"⏰ *{stall.name}* is currently closed.\n"
+                f"Opening hours: {open_str} – {close_str}\n\n"
+                "Please select an open stall (🟢) from the list."
             )
 
         update_selected_stall(
