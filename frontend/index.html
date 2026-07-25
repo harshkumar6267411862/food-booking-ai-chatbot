@@ -107,30 +107,84 @@
   </div>
 
   <!-- ═══════════════════════ SUPER ADMIN PANEL ═══════════════════════ -->
-  <section class="super-admin-panel hidden" id="superAdminPanel" aria-label="Super Admin Management">
-    <div class="panel-header">
-      <h2>👑 Super Admin — Stall Admin Management</h2>
-      <p>Monitor all registered stall admins, track stall assignments, and reset login codes when needed.</p>
+  <section class="super-admin-container hidden" id="superAdminPanel" aria-label="Super Admin Management">
+    
+    <!-- Top Header & Banner -->
+    <div class="sa-header-card">
+      <div class="sa-header-main">
+        <div class="sa-title-badge">👑 SYSTEM CONTROL</div>
+        <h1 class="sa-title">Stall Admin & System Management</h1>
+        <p class="sa-subtitle">Monitor registered food stall administrators, assign new stalls, and manage authentication credentials across the platform.</p>
+      </div>
+      <div class="sa-header-actions">
+        <a href="/admin-dashboard/register.html" class="btn-primary-action">
+          <span class="btn-icon">➕</span> Register New Stall Admin
+        </a>
+      </div>
     </div>
 
-    <div class="admin-table-wrapper">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Registration #</th>
-            <th>Stall Name</th>
-            <th>Admin Name / Phone</th>
-            <th>Status</th>
-            <th>Registered At</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="adminTableBody">
-          <!-- Dynamically populated -->
-        </tbody>
-      </table>
+    <!-- Stats Counter Grid -->
+    <div class="sa-stats-grid">
+      <div class="sa-stat-card">
+        <div class="sa-stat-icon purple">🏪</div>
+        <div class="sa-stat-details">
+          <span class="sa-stat-value" id="saTotalAdmins">0</span>
+          <span class="sa-stat-label">Total Admins</span>
+        </div>
+      </div>
+      <div class="sa-stat-card">
+        <div class="sa-stat-icon green">⚡</div>
+        <div class="sa-stat-details">
+          <span class="sa-stat-value" id="saActiveAdmins">0</span>
+          <span class="sa-stat-label">Active Stall Admins</span>
+        </div>
+      </div>
+      <div class="sa-stat-card">
+        <div class="sa-stat-icon amber">⏳</div>
+        <div class="sa-stat-details">
+          <span class="sa-stat-value" id="saPendingSetup">0</span>
+          <span class="sa-stat-label">Pending Setup</span>
+        </div>
+      </div>
     </div>
+
+    <!-- Data Table Container -->
+    <div class="sa-table-card">
+      <div class="sa-table-header">
+        <div class="sa-table-title">
+          <h3>📋 Registered Administrator Accounts</h3>
+          <span class="sa-badge-count" id="saAdminCountBadge">0 Admins</span>
+        </div>
+        <div class="sa-table-controls">
+          <div class="sa-search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="saSearchInput" placeholder="Search by Reg #, Name, or Stall…" />
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-table-wrapper">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>REGISTRATION #</th>
+              <th>ASSIGNED STALL</th>
+              <th>ADMIN DETAILS</th>
+              <th>PHONE NUMBER</th>
+              <th>ACCOUNT STATUS</th>
+              <th>REGISTERED DATE</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </section>
+
 
   <!-- ═══════════════════════ KANBAN BOARD ═══════════════════════ -->
   <main class="board-wrapper" id="kanbanBoardWrapper" aria-label="Order Kanban Board">

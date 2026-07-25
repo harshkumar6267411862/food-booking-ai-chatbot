@@ -436,47 +436,99 @@ async function handleResetAdminCode(userId, regNum, stallName) {
   }
 }
 
+let ALL_ADMIN_DATA = [];
+
 async function loadSuperAdminPanel() {
   const tableBody = document.getElementById("adminTableBody");
   if (!tableBody) return;
-  tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem;">Loading admin list...</td></tr>`;
+  tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2.5rem; color: #94a3b8;"><span class="spinning" style="display:inline-block; font-size:1.2rem; margin-right:0.5rem;">↻</span> Loading administrator accounts…</td></tr>`;
 
   try {
-    const admins = await API.getAllAdmins();
-    if (!admins || admins.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-secondary);">No registered stall admins found.</td></tr>`;
-      return;
+    ALL_ADMIN_DATA = (await API.getAllAdmins()) || [];
+    
+    // Update Stats Counters
+    const total = ALL_ADMIN_DATA.length;
+    const active = ALL_ADMIN_DATA.filter(a => a.profile_complete).length;
+    const pending = total - active;
+
+    const totalEl = document.getElementById("saTotalAdmins");
+    const activeEl = document.getElementById("saActiveAdmins");
+    const pendingEl = document.getElementById("saPendingSetup");
+    const badgeEl = document.getElementById("saAdminCountBadge");
+
+    if (totalEl) totalEl.textContent = total;
+    if (activeEl) activeEl.textContent = active;
+    if (pendingEl) pendingEl.textContent = pending;
+    if (badgeEl) badgeEl.textContent = `${total} Admin${total === 1 ? '' : 's'}`;
+
+    renderAdminTable(ALL_ADMIN_DATA);
+
+    // Live Search Filter Handler
+    const searchInput = document.getElementById("saSearchInput");
+    if (searchInput && !searchInput.dataset.initialized) {
+      searchInput.dataset.initialized = "true";
+      searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const filtered = ALL_ADMIN_DATA.filter((a) => {
+          const reg = (a.registration_number || "").toLowerCase();
+          const name = (a.name || "").toLowerCase();
+          const stall = (a.stall_name || "").toLowerCase();
+          const phone = (a.phone_number || "").toLowerCase();
+          return reg.includes(query) || name.includes(query) || stall.includes(query) || phone.includes(query);
+        });
+        renderAdminTable(filtered);
+      });
     }
 
-    tableBody.innerHTML = admins
-      .map(
-        (a) => `
-        <tr>
-          <td><strong style="font-family: monospace; color: var(--accent-primary);">${a.registration_number}</strong></td>
-          <td>${a.stall_name ? `🏪 <strong>${a.stall_name}</strong>` : '<span style="color: var(--text-muted);">Unassigned</span>'}</td>
-          <td>
-            <div><strong>${a.name || "Pending Setup"}</strong></div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">${a.phone_number || "-"}</div>
-          </td>
-          <td>
-            <span class="badge-status ${a.profile_complete ? "complete" : "pending"}">
-              ${a.profile_complete ? "Active" : "Setup Pending"}
-            </span>
-          </td>
-          <td style="font-size: 0.85rem; color: var(--text-secondary);">${new Date(a.created_at).toLocaleDateString("en-IN")}</td>
-          <td>
-            <button class="btn-reset-code" onclick="handleResetAdminCode(${a.id}, '${a.registration_number}', '${a.stall_name || ""}')">
-              🔑 Reset Login Code
-            </button>
-          </td>
-        </tr>
-      `
-      )
-      .join("");
   } catch (err) {
-    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--status-cancelled);">Error: ${err.message}</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 2.5rem; color: #ef4444;">❌ Failed to load admin list: ${err.message}</td></tr>`;
   }
 }
+
+function renderAdminTable(admins) {
+  const tableBody = document.getElementById("adminTableBody");
+  if (!tableBody) return;
+
+  if (!admins || admins.length === 0) {
+    tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 3rem; color: #64748b;">No admin accounts found matching search criteria.</td></tr>`;
+    return;
+  }
+
+  tableBody.innerHTML = admins
+    .map(
+      (a) => `
+      <tr>
+        <td>
+          <span class="reg-badge">${a.registration_number}</span>
+        </td>
+        <td>
+          ${a.stall_name ? `<div class="stall-cell"><span>🏪</span><span>${a.stall_name}</span></div>` : '<span class="stall-unassigned">Unassigned (Master)</span>'}
+        </td>
+        <td>
+          <div class="admin-name-text">${a.name || "Pending Setup"}</div>
+        </td>
+        <td>
+          <div class="admin-phone-text">${a.phone_number || "-"}</div>
+        </td>
+        <td>
+          <span class="badge-status ${a.profile_complete ? "complete" : "pending"}">
+            ${a.profile_complete ? "● Active" : "○ Setup Pending"}
+          </span>
+        </td>
+        <td style="color: #94a3b8; font-size: 0.85rem;">
+          ${new Date(a.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+        </td>
+        <td>
+          <button class="btn-reset-code" onclick="handleResetAdminCode(${a.id}, '${a.registration_number}', '${a.stall_name || ""}')">
+            🔑 Reset Login Code
+          </button>
+        </td>
+      </tr>
+    `
+    )
+    .join("");
+}
+
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 (async () => {
