@@ -33,12 +33,21 @@ def get_unassigned_stalls(
     )
     assigned_ids = {row[0] for row in assigned_stall_ids}
 
-    unassigned = (
-        db.query(FoodStall)
-        .filter(FoodStall.id.notin_(assigned_ids))
-        .order_by(FoodStall.name)
-        .all()
-    )
+    # SQLAlchemy's notin_() generates broken SQL when given an empty set.
+    # When no stalls are assigned yet, return all stalls directly.
+    if not assigned_ids:
+        unassigned = (
+            db.query(FoodStall)
+            .order_by(FoodStall.name)
+            .all()
+        )
+    else:
+        unassigned = (
+            db.query(FoodStall)
+            .filter(FoodStall.id.notin_(assigned_ids))
+            .order_by(FoodStall.name)
+            .all()
+        )
     return unassigned
 
 

@@ -472,7 +472,10 @@ def handle_selecting_stall(
             session,
         )
 
-    return "Loading today's menu..."
+    # Stall already selected — advance state to VIEWING_MENU
+    update_current_menu_page(db, session, 1)
+    update_chat_state(db, session, ChatState.VIEWING_MENU)
+    return handle_viewing_menu(db, user, session)
 
 def handle_waiting_for_registration(
     db: Session,
