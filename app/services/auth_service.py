@@ -187,7 +187,7 @@ def register_stall_admin(db: Session, stall_id: int) -> tuple[str, str, str]:
         registration_number=reg_number,
         name=None,
         email=None,
-        phone_number=f"0000000000_{reg_number}",  # placeholder until profile setup
+        phone_number=reg_number,  # placeholder until profile setup
         password_hash=hash_password(plain_code),
         role=UserRole.ADMIN,
         stall_id=stall_id,
