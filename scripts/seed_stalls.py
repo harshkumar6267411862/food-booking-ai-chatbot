@@ -1,3 +1,4 @@
+from datetime import time
 from app.database import SessionLocal
 from app.models.stall import FoodStall
 from app.repositories.stall_repository import (
@@ -10,26 +11,36 @@ STALLS = [
         "name": "Vishal Dhaba",
         "description": "Vishal Dhaba",
         "location": "BLOCK-27",
+        "opening_time": time(8, 0),
+        "closing_time": time(22, 0),
     },
     {
         "name": "Gupta Canteen",
         "description": "Gupta Canteen",
         "location": "BLOCK-28",
+        "opening_time": time(8, 0),
+        "closing_time": time(22, 0),
     },
     {
         "name": "Kitchen Ette",
         "description": "Kitchen Ette",
         "location": "CC",
+        "opening_time": time(8, 0),
+        "closing_time": time(22, 0),
     },
     {
         "name": "Ahuja",
         "description": "Ahuja Canteen",
         "location": "UNIMALL",
+        "opening_time": time(8, 0),
+        "closing_time": time(22, 0),
     },
     {
         "name": "Chai Vyanjan",
         "description": "Chai Vyanjan",
         "location": "UNIMALL",
+        "opening_time": time(8, 0),
+        "closing_time": time(22, 0),
     },
 ]
 
