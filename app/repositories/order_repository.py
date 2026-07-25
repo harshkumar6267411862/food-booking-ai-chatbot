@@ -59,6 +59,24 @@ def get_pending_orders(db: Session) -> list[Order]:
         .order_by(Order.created_at.asc())
         .all()
     )
+
+
+def get_pending_orders_by_stall(db: Session, stall_id: int) -> list[Order]:
+    """
+    Fetch all pending orders for a specific stall.
+    """
+
+    return (
+        db.query(Order)
+        .options(
+            joinedload(Order.user),
+            joinedload(Order.pickup_slot),
+            joinedload(Order.order_items).joinedload(OrderItem.menu_item),
+        )
+        .filter(Order.status == OrderStatus.PENDING, Order.stall_id == stall_id)
+        .order_by(Order.created_at.asc())
+        .all()
+    )
     
 def get_latest_active_order_by_user(
     db: Session,

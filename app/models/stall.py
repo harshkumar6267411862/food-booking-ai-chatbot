@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, time
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column,relationship
+from sqlalchemy import Boolean, DateTime, String, Time
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
 if TYPE_CHECKING:
     from app.models.menu_item import MenuItem
+    from app.models.user import User
 
 
 class FoodStall(Base):
@@ -40,11 +41,17 @@ class FoodStall(Base):
         String(500),
         nullable=True
     )
+    
+    opening_time: Mapped[time] = mapped_column(
+    Time,
+    nullable=False
+)
 
-    is_open: Mapped[bool] = mapped_column(
-        Boolean,
-        default=True
+    closing_time: Mapped[time] = mapped_column(
+        Time,
+        nullable=False
     )
+
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -60,4 +67,10 @@ class FoodStall(Base):
     menu_items: Mapped[list["MenuItem"]] = relationship(
         back_populates="food_stall",
         cascade="all, delete-orphan"
+    )
+
+    admin: Mapped["User | None"] = relationship(
+        back_populates="stall",
+        foreign_keys="[User.stall_id]",
+        uselist=False,
     )

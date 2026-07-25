@@ -13,6 +13,7 @@ from app.api.user import router as user_router
 from app.api.pickup_slot import router as pickup_router
 from app.api import admin_pickup_slots
 from app.api import menu_item, orders, admin_orders, stall, webhook
+from app.api import admin_registration, admin_profile
 
 
 # Base.metadata.create_all(bind=engine)
@@ -70,6 +71,7 @@ from app.models.user import User
 from app.enums.user_role import UserRole
 from app.utils.security import hash_password
 
+
 db = SessionLocal()
 
 if not db.query(User).filter(User.email == "admin@test.com").first():
@@ -80,9 +82,16 @@ if not db.query(User).filter(User.email == "admin@test.com").first():
         phone_number="9999999999",
         password_hash=hash_password("Admin@123"),
         role=UserRole.ADMIN,
+        profile_complete=True,
     )
     db.add(admin)
     db.commit()
+else:
+    # Ensure existing seeded admin has profile_complete=True
+    seeded = db.query(User).filter(User.email == "admin@test.com").first()
+    if seeded and not seeded.profile_complete:
+        seeded.profile_complete = True
+        db.commit()
 
 db.close()
 
@@ -121,6 +130,9 @@ app.include_router(orders.router)
 app.include_router(admin_orders.router)
 app.include_router(webhook.router)
 app.include_router(admin_pickup_slots.router)
+app.include_router(admin_registration.router)
+app.include_router(admin_profile.router)
+
 
 @app.get("/")
 def root():

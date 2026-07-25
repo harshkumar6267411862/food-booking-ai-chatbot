@@ -14,6 +14,8 @@ from app.repositories.menu_item_repository import (
     get_menu_item_by_id,
     
     )
+
+from app.utils.stall_utils import is_stall_open
 from app.repositories.user_repository import (
     create_user,
     get_user_by_phone,
@@ -440,7 +442,7 @@ def handle_selecting_stall(
             int(text),
         )
 
-        if not stall or not stall.is_open:
+        if not stall or not is_stall_open(stall):
             return (
                 "❌ Invalid stall number.\n\n"
                 "Please choose one of the available stalls."

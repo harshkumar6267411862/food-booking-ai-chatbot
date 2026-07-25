@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register Stall Admin — MunchBot</title>
+  <meta name="description" content="Register a new stall admin on the MunchBot Admin Panel." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>" />
+</head>
+<body class="register-page">
+  <div class="bg-mesh"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a class="nav-brand" href="/admin-dashboard/index.html">
+      <div class="logo-icon">🍔</div>
+      <div class="brand-name">
+        <span class="munch">Munch</span><span class="bot">Bot</span>
+      </div>
+    </a>
+    <div class="nav-right">
+      <div class="nav-admin">
+        <div class="avatar" id="adminInitial">A</div>
+        <span id="adminName">Admin</span>
+      </div>
+      <button class="btn-logout" id="logoutBtn">Sign out</button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="register-main">
+    <div class="register-header">
+      <h1 class="register-title">🏪 Register a New Stall Admin</h1>
+      <p class="register-subtitle">
+        Select a stall below. The system will generate a unique
+        <strong>Registration Number</strong> and <strong>Login Code</strong> for the new admin.
+      </p>
+      <a class="btn-back" href="/admin-dashboard/index.html">← Back to Dashboard</a>
+    </div>
+
+    <!-- STALLS GRID -->
+    <div class="stalls-grid" id="stallsGrid">
+      <div class="skeleton skeleton-stall-card"></div>
+      <div class="skeleton skeleton-stall-card"></div>
+      <div class="skeleton skeleton-stall-card"></div>
+    </div>
+
+    <div class="no-stalls-msg hidden" id="noStallsMsg">
+      <span style="font-size:2.5rem">✅</span>
+      <p>All stalls already have an admin assigned!</p>
+    </div>
+  </main>
+
+  <!-- CREDENTIALS MODAL -->
+  <div class="modal-overlay hidden" id="credModal" role="dialog" aria-modal="true" aria-labelledby="credTitle">
+    <div class="modal-card cred-card">
+      <div class="cred-success-icon">🎉</div>
+      <h2 class="modal-title" id="credTitle">Admin Account Created!</h2>
+      <p class="modal-sub">Share these credentials securely with the stall owner. <strong>The login code cannot be recovered later.</strong></p>
+
+      <div class="cred-grid">
+        <div class="cred-row">
+          <span class="cred-label">🏪 Stall Assigned</span>
+          <span class="cred-value" id="credStall">—</span>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">🪪 Registration Number</span>
+          <div class="cred-copy-row">
+            <span class="cred-value mono" id="credRegNum">—</span>
+            <button class="btn-copy" id="copyRegNum" title="Copy">📋</button>
+          </div>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">🔑 Login Code</span>
+          <div class="cred-copy-row">
+            <span class="cred-value mono" id="credCode">—</span>
+            <button class="btn-copy" id="copyCode" title="Copy">📋</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="cred-note">⚠️ The admin will be prompted to enter their name and phone number on first login.</p>
+
+      <div class="modal-actions">
+        <button class="btn-primary-modal" id="credDoneBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="js/api.js"></script>
+  <script>
+    Auth.requireAuth();
+    if (!Auth.getProfileComplete()) {
+      window.location.href = "/admin-dashboard/setup.html";
+    }
+
+    document.getElementById("adminName").textContent = Auth.getAdminName();
+    document.getElementById("adminInitial").textContent = Auth.getAdminName().charAt(0).toUpperCase();
+    document.getElementById("logoutBtn").addEventListener("click", Auth.logout);
+
+    const grid       = document.getElementById("stallsGrid");
+    const noMsg      = document.getElementById("noStallsMsg");
+    const credModal  = document.getElementById("credModal");
+    const toastCont  = document.getElementById("toastContainer");
+
+    function toast(msg, type = "info") {
+      const icons = { success: "✅", error: "❌", info: "ℹ️" };
+      const el = document.createElement("div");
+      el.className = `toast ${type}`;
+      el.innerHTML = `<span class="toast-icon">${icons[type]}</span><span class="toast-msg">${msg}</span>`;
+      toastCont.appendChild(el);
+      setTimeout(() => { el.classList.add("fade-out"); setTimeout(() => el.remove(), 400); }, 3500);
+    }
+
+    function copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = "✅";
+        setTimeout(() => (btn.textContent = "📋"), 1500);
+      });
+    }
+
+    document.getElementById("copyRegNum").addEventListener("click", () => {
+      copyToClipboard(document.getElementById("credRegNum").textContent, document.getElementById("copyRegNum"));
+    });
+    document.getElementById("copyCode").addEventListener("click", () => {
+      copyToClipboard(document.getElementById("credCode").textContent, document.getElementById("copyCode"));
+    });
+    document.getElementById("credDoneBtn").addEventListener("click", () => {
+      credModal.classList.add("hidden");
+      loadStalls(); // Refresh the list
+    });
+
+    function showCredentials(data) {
+      document.getElementById("credStall").textContent  = data.stall_name;
+      document.getElementById("credRegNum").textContent = data.registration_number;
+      document.getElementById("credCode").textContent   = data.login_code;
+      credModal.classList.remove("hidden");
+    }
+
+    async function registerForStall(stallId, stallName, btn) {
+      btn.disabled = true;
+      btn.textContent = "Registering…";
+      try {
+        const result = await API.registerAdmin(stallId);
+        showCredentials(result);
+        toast(`Admin registered for ${stallName}!`, "success");
+      } catch (err) {
+        toast(err.message || "Failed to register admin.", "error");
+        btn.disabled = false;
+        btn.textContent = "Register Admin";
+      }
+    }
+
+    async function loadStalls() {
+      grid.innerHTML = `
+        <div class="skeleton skeleton-stall-card"></div>
+        <div class="skeleton skeleton-stall-card"></div>
+        <div class="skeleton skeleton-stall-card"></div>`;
+      noMsg.classList.add("hidden");
+
+      try {
+        const stalls = await API.getUnassignedStalls();
+        grid.innerHTML = "";
+
+        if (!stalls || stalls.length === 0) {
+          noMsg.classList.remove("hidden");
+          return;
+        }
+
+        stalls.forEach((stall) => {
+          const card = document.createElement("div");
+          card.className = "stall-reg-card";
+          const open  = stall.opening_time?.slice(0, 5) || "--:--";
+          const close = stall.closing_time?.slice(0, 5) || "--:--";
+          card.innerHTML = `
+            <div class="src-icon">🏪</div>
+            <div class="src-name">${stall.name}</div>
+            <div class="src-location">📍 ${stall.location}</div>
+            <div class="src-hours">🕐 ${open} – ${close}</div>
+            <button class="btn-register-stall" id="reg-${stall.id}">
+              Register Admin
+            </button>`;
+          card.querySelector(`#reg-${stall.id}`).addEventListener("click", (e) => {
+            registerForStall(stall.id, stall.name, e.currentTarget);
+          });
+          grid.appendChild(card);
+        });
+      } catch (err) {
+        grid.innerHTML = `<p style="color:var(--clr-error);padding:1rem">Failed to load stalls: ${err.message}</p>`;
+      }
+    }
+
+    loadStalls();
+  </script>
+</body>
+</html>

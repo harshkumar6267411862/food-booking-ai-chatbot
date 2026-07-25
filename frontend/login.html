@@ -59,6 +59,9 @@
 
       <div class="login-error" id="loginError"></div>
     </form>
+
+    <div class="login-divider"></div>
+    <a class="register-link" id="registerAdminLink" href="/admin-dashboard/register.html">🏪 Register a New Stall Admin</a>
   </div>
 
   <script src="js/api.js"></script>
@@ -92,10 +95,26 @@
         const data = await API.login(regNum, pass);
         Auth.setToken(data.access_token);
 
-        // Fetch admin name
+        // Fetch admin profile
         try {
           const me = await API.me();
           Auth.setAdminName(me.name || "Admin");
+          Auth.setProfileComplete(me.profile_complete ?? false);
+          Auth.setStallId(me.stall_id ?? null);
+
+          // Fetch stall name if assigned
+          if (me.stall_id) {
+            try {
+              const stall = await API.getMyStall();
+              Auth.setStallName(stall.name || "");
+            } catch (_) {}
+          }
+
+          // First-login: redirect to profile setup
+          if (!me.profile_complete) {
+            window.location.href = "/admin-dashboard/setup.html";
+            return;
+          }
         } catch (_) {}
 
         window.location.href = "/admin-dashboard/index.html";

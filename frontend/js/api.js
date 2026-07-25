@@ -12,6 +12,12 @@ const Auth = {
   removeToken: () => localStorage.removeItem("mb_token"),
   getAdminName: () => localStorage.getItem("mb_admin_name") || "Admin",
   setAdminName: (n) => localStorage.setItem("mb_admin_name", n),
+  getStallName: () => localStorage.getItem("mb_stall_name") || "",
+  setStallName: (s) => localStorage.setItem("mb_stall_name", s),
+  getStallId: () => parseInt(localStorage.getItem("mb_stall_id") || "0") || null,
+  setStallId: (id) => localStorage.setItem("mb_stall_id", id ?? ""),
+  getProfileComplete: () => localStorage.getItem("mb_profile_complete") === "true",
+  setProfileComplete: (v) => localStorage.setItem("mb_profile_complete", v ? "true" : "false"),
   isLoggedIn: () => !!localStorage.getItem("mb_token"),
   requireAuth: () => {
     if (!localStorage.getItem("mb_token")) {
@@ -21,6 +27,9 @@ const Auth = {
   logout: () => {
     localStorage.removeItem("mb_token");
     localStorage.removeItem("mb_admin_name");
+    localStorage.removeItem("mb_stall_name");
+    localStorage.removeItem("mb_stall_id");
+    localStorage.removeItem("mb_profile_complete");
     window.location.href = "/admin-dashboard/login.html";
   },
 };
@@ -116,6 +125,25 @@ generatePickupSlots: (slotDate) =>
             }),
         }
     ),
+
+/* ==========================================================
+   Stall Operations
+========================================================== */
+
+  getStalls: () => apiFetch("/stalls/"),
+
+  getUnassignedStalls: () => apiFetch("/admin/stalls/unassigned"),
+
+  registerAdmin: (stallId) =>
+    apiFetch(`/admin/register?stall_id=${stallId}`, { method: "POST" }),
+
+  setupProfile: (name, phone_number) =>
+    apiFetch("/admin/profile/setup", {
+      method: "POST",
+      body: JSON.stringify({ name, phone_number }),
+    }),
+
+  getMyStall: () => apiFetch("/admin/profile/stall"),
 };
 
 // ── Formatting helpers ────────────────────────────────────────────────────────

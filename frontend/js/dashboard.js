@@ -40,24 +40,31 @@ const lastUpdEl   = document.getElementById("lastUpdated");
 const refreshBtn  = document.getElementById("refreshBtn");
 const toastCont   = document.getElementById("toastContainer");
 
-/* ── Operations Panel ───────────────────────────────────────────── */
+/* ── Operations Panel ───────────────────────────────────────── */
 
 const todayDateEl = document.getElementById("todayDate");
 
 const generateSlotsBtn =
     document.getElementById("generateSlotsBtn");
 
-const openCafeteriaBtn =
-    document.getElementById("openCafeteriaBtn");
-
-const closeCafeteriaBtn =
-    document.getElementById("closeCafeteriaBtn");
-
 // ── Init ─────────────────────────────────────────────────────────────────────
 Auth.requireAuth();
+
+// Redirect if profile not yet complete (new admin first login)
+if (!Auth.getProfileComplete()) {
+  window.location.href = "/admin-dashboard/setup.html";
+}
+
 document.getElementById("adminName").textContent = Auth.getAdminName();
 document.getElementById("adminInitial").textContent = Auth.getAdminName().charAt(0).toUpperCase();
 document.getElementById("logoutBtn").addEventListener("click", Auth.logout);
+
+// Show stall name in header if available
+const stallName = Auth.getStallName();
+const stallNameEl = document.getElementById("stallNameDisplay");
+if (stallNameEl) {
+  stallNameEl.textContent = stallName ? `🏪 ${stallName}` : "";
+}
 
 // OTP modal — digit-by-digit navigation
 const otpInputs = document.querySelectorAll(".otp-digit");
@@ -81,24 +88,6 @@ generateSlotsBtn.addEventListener(
     "click",
     generatePickupSlots
 );
-
-openCafeteriaBtn.addEventListener(() => {
-
-    toast(
-        "Open Cafeteria will be available soon.",
-        "info"
-    );
-
-});
-
-closeCafeteriaBtn.addEventListener(() => {
-
-    toast(
-        "Close Cafeteria will be available soon.",
-        "info"
-    );
-
-});
 
 
 // ── Toast ─────────────────────────────────────────────────────────────────────

@@ -27,7 +27,7 @@ from app.repositories.cart_item_repository import (
 )
 from app.utils.security import generate_otp, hash_otp, verify_otp
 from app.enums.cancelled_by import CancelledBy
-from app.repositories.order_repository import get_pending_orders
+from app.repositories.order_repository import get_pending_orders, get_pending_orders_by_stall
 from app.services.whatsapp_service import send_whatsapp_message
 
 def generate_order_number(order_id: int) -> str:
@@ -356,11 +356,14 @@ def update_order_status(
 
 def get_pending_orders_for_admin(
     db: Session,
+    stall_id: int | None = None,
 ) -> list[Order]:
     """
     Retrieve all pending orders for the admin dashboard.
+    If stall_id is provided, filter to that stall only.
     """
-
+    if stall_id is not None:
+        return get_pending_orders_by_stall(db, stall_id)
     return get_pending_orders(db)
 
 def start_preparing_order(db: Session, order_id: int) -> Order:

@@ -8,7 +8,7 @@ from app.enums.menu_category import MenuCategory
 
 def test_get_stalls_and_menu_items(client, db):
     # Setup stall & menu item
-    stall = FoodStall(name="Canteen Stall 1", description="Main Canteen", location="Block A", is_open=True)
+    stall = FoodStall(name="Canteen Stall 1", description="Main Canteen", location="Block A", opening_time=time(0, 0), closing_time=time(23, 59),)
     db.add(stall)
     db.commit()
     db.refresh(stall)

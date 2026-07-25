@@ -48,10 +48,9 @@ def get_pending_orders(
     current_admin: User = Depends(get_current_admin),
 ):
     """
-    Retrieve all pending orders.
+    Retrieve all pending orders for the logged-in admin's stall.
     """
-
-    return get_pending_orders_for_admin(db)
+    return get_pending_orders_for_admin(db, stall_id=current_admin.stall_id)
 
 @router.patch(
     "/{order_id}/prepare",

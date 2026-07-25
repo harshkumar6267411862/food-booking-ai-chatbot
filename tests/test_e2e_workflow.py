@@ -11,8 +11,10 @@ from app.enums.user_role import UserRole
 from app.utils.security import hash_password
 
 @pytest.fixture
-def setup_data(db):
-    stall = FoodStall(name="Test Stall", description="Test", location="A1", is_open=True)
+def setup_data(db, monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "WHATSAPP_PROVIDER", "mock")
+    stall = FoodStall(name="Test Stall", description="Test", location="A1", opening_time=time(0, 0), closing_time=time(23, 59))
     db.add(stall)
     db.commit()
     db.refresh(stall)

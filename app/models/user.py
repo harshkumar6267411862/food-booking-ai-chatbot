@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum as SQLEnum , String
+from sqlalchemy import Boolean, DateTime, Enum as SQLEnum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import TYPE_CHECKING
 from app.database import Base
@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from app.models.order import Order
     from app.models.user_session import UserSession
     from app.models.cart import Cart
+    from app.models.stall import FoodStall
 
 class User(Base):
     __tablename__ = "users"
@@ -59,6 +60,19 @@ class User(Base):
         default=True
     )
 
+    stall_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("food_stalls.id", ondelete="SET NULL"),
+        nullable=True,
+        unique=True,
+    )
+
+    profile_complete: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow
@@ -81,4 +95,9 @@ class User(Base):
     session: Mapped["UserSession"] = relationship(
         back_populates="user",
         uselist=False,
+    )
+
+    stall: Mapped["FoodStall | None"] = relationship(
+        back_populates="admin",
+        foreign_keys="[User.stall_id]",
     )

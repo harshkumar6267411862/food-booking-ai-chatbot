@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.user import User
     from app.models.pickup_slot import PickupSlot
     from app.models.order_item import OrderItem
+    from app.models.stall import FoodStall
 
 class Order(Base):
     
@@ -41,6 +42,12 @@ class Order(Base):
     pickup_slot_id: Mapped[int] = mapped_column(
         ForeignKey("pickup_slots.id"),
         nullable=False
+    )
+
+    stall_id: Mapped[int | None] = mapped_column(
+        ForeignKey("food_stalls.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
 
     status: Mapped[OrderStatus] = mapped_column(
@@ -116,6 +123,10 @@ class Order(Base):
     order_items: Mapped[list[OrderItem]] = relationship(
         back_populates="order",
         cascade="all, delete-orphan"
+    )
+
+    stall: Mapped["FoodStall | None"] = relationship(
+        foreign_keys="[Order.stall_id]",
     )
     
     pickup_otp_hash: Mapped[str | None] = mapped_column(

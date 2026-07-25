@@ -72,9 +72,11 @@ class TokenResponse(BaseModel):
 class UserResponse(BaseModel):
     id: int
     registration_number: str
-    name: str
-    email: EmailStr
+    name: str | None = None
+    email: str | None = None
     role: UserRole
+    stall_id: int | None = None
+    profile_complete: bool = False
     created_at: datetime
 
     model_config = ConfigDict(
@@ -86,7 +88,28 @@ class UserSummary(BaseModel):
     Minimal user information for nested responses.
     """
 
-    registration_number: str
-    name: str
+    registration_number: str | None = None
+    name: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AdminRegisterResponse(BaseModel):
+    """
+    Returned after a super-admin creates a new stall admin account.
+    """
+    registration_number: str
+    login_code: str
+    stall_name: str
+    stall_id: int
+
+
+class AdminProfileSetupRequest(BaseModel):
+    """
+    Submitted by a new admin on first login to complete their profile.
+    """
+    name: str = Field(min_length=2, max_length=100)
+    phone_number: str = Field(
+        pattern=r"^(?:\+91|91)?[6-9]\d{9}$",
+        description="Indian mobile number (e.g. 9876543210)",
+    )

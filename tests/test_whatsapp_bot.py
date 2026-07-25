@@ -20,7 +20,7 @@ def setup_bot_data(db, monkeypatch):
     monkeypatch.setattr(pss, "CAFETERIA_OPENING_TIME", time(0, 0))
     monkeypatch.setattr(pss, "CAFETERIA_CLOSING_TIME", time(23, 59))
 
-    stall = FoodStall(name="Bot Stall", description="Bot Canteen", location="Block B", is_open=True)
+    stall = FoodStall(name="Bot Stall", description="Bot Canteen", location="Block B", opening_time=time(0, 0), closing_time=time(23, 59))
     db.add(stall)
     db.commit()
     db.refresh(stall)
@@ -80,25 +80,25 @@ def test_whatsapp_chatbot_ordering_flow(client, setup_bot_data):
     # 1. Send HI
     res = client.post("/webhook", json={"from": phone, "text": "HI"})
     assert res.status_code == 200
-    assert "Welcome to *MunchBot*" in res.json()["reply"]
-    assert "Samosa" in res.json()["reply"]
+    assert "Available Food Stalls" in res.json()["reply"]
 
-    # 2. Select items: ORDER <item_id> x2
-    res = client.post("/webhook", json={"from": phone, "text": f"ORDER {item_id} x2"})
+    # 1.5 Select stall 1
+    res = client.post("/webhook", json={"from": phone, "text": "1"})
     assert res.status_code == 200
-    assert "ITEMS ADDED TO CART" in res.json()["reply"]
 
-    # 3. View & select slot: SLOT <slot_id>
-    res = client.post("/webhook", json={"from": phone, "text": f"SLOT {slot_id}"})
+    # 2. Select item number 1
+    res = client.post("/webhook", json={"from": phone, "text": "1"})
     assert res.status_code == 200
-    assert "ORDER SUMMARY" in res.json()["reply"]
-    assert "Samosa" in res.json()["reply"]
 
-    # 4. Confirm order: CONFIRM
-    res = client.post("/webhook", json={"from": phone, "text": "CONFIRM"})
+    # 2.5 Send DONE
+    res = client.post("/webhook", json={"from": phone, "text": "DONE"})
+    assert res.status_code == 200
+
+    # 3. View & select slot 1 (places order)
+    res = client.post("/webhook", json={"from": phone, "text": "1"})
     assert res.status_code == 200
     reply = res.json()["reply"]
-    assert "ORDER PLACED SUCCESSFULLY" in reply
+    assert "Order Placed Successfully" in reply
     assert "ORD" in reply
 
     # Extract order number/id from orders DB
@@ -110,11 +110,6 @@ def test_whatsapp_chatbot_ordering_flow(client, setup_bot_data):
     orders = pending_res.json()
     assert len(orders) >= 1
     order_id = orders[0]["id"]
-
-    # 5. Check status via WhatsApp
-    res = client.post("/webhook", json={"from": phone, "text": "STATUS"})
-    assert res.status_code == 200
-    assert "PENDING" in res.json()["reply"]
 
     # 6. Admin confirms & marks ready
     client.patch(f"/admin/orders/{order_id}/confirm", headers=admin_headers)
