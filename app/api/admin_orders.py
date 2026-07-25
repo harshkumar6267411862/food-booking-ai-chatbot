@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -13,6 +14,8 @@ from app.services.order_service import (
     cancel_order,
     auto_cancel_pending_orders,
 )
+from app.repositories.order_repository import get_order_by_id
+
 from app.enums.cancelled_by import CancelledBy
 from app.services.auth_service import get_current_admin
 
@@ -20,6 +23,14 @@ router = APIRouter(
     prefix="/admin/orders",
     tags=["Admin Orders"],
 )
+
+def verify_admin_stall_ownership(current_admin: User, order_stall_id: int):
+    if current_admin.stall_id is None or current_admin.stall_id != order_stall_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to manage orders for this stall.",
+        )
+
 
 @router.patch(
     "/{order_id}/confirm",
@@ -33,6 +44,10 @@ def confirm_order_endpoint(
     """
     Confirm a pending order.
     """
+    order = get_order_by_id(db, order_id)
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found.")
+    verify_admin_stall_ownership(current_admin, order.stall_id)
 
     return confirm_order(
         db=db,
@@ -50,6 +65,8 @@ def get_pending_orders(
     """
     Retrieve all pending orders for the logged-in admin's stall.
     """
+    if current_admin.stall_id is None:
+        return []
     return get_pending_orders_for_admin(db, stall_id=current_admin.stall_id)
 
 @router.patch(
@@ -64,6 +81,11 @@ def prepare_order_endpoint(
     """
     Start preparing a confirmed order.
     """
+    order = get_order_by_id(db, order_id)
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found.")
+    verify_admin_stall_ownership(current_admin, order.stall_id)
+
     return start_preparing_order(db=db, order_id=order_id)
 
 
@@ -80,8 +102,13 @@ def mark_order_ready_endpoint(
     Mark an order as ready for pickup.
     Returns the order details and the plain-text OTP for the user.
     """
-    order, otp = mark_order_ready(db=db, order_id=order_id)
-    return MarkReadyResponse(order=OrderAdminResponse.model_validate(order), otp=otp)
+    order = get_order_by_id(db, order_id)
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found.")
+    verify_admin_stall_ownership(current_admin, order.stall_id)
+
+    ready_order_obj, otp = mark_order_ready(db=db, order_id=order_id)
+    return MarkReadyResponse(order=OrderAdminResponse.model_validate(ready_order_obj), otp=otp)
 
 
 @router.post(
@@ -97,6 +124,11 @@ def verify_otp_endpoint(
     """
     Verify the OTP and complete the order.
     """
+    order = get_order_by_id(db, order_id)
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found.")
+    verify_admin_stall_ownership(current_admin, order.stall_id)
+
     return verify_otp_and_complete_order(
         db=db, 
         order_id=order_id, 
@@ -117,12 +149,18 @@ def cancel_order_admin_endpoint(
     """
     Cancel an order by admin (with reason).
     """
+    order = get_order_by_id(db, order_id)
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found.")
+    verify_admin_stall_ownership(current_admin, order.stall_id)
+
     return cancel_order(
         db=db,
         order_id=order_id,
         cancel_reason=request.cancel_reason,
         cancelled_by=CancelledBy.ADMIN,
     )
+
 
 
 @router.post(

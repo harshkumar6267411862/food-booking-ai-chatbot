@@ -106,8 +106,34 @@
     </button>
   </div>
 
+  <!-- ═══════════════════════ SUPER ADMIN PANEL ═══════════════════════ -->
+  <section class="super-admin-panel hidden" id="superAdminPanel" aria-label="Super Admin Management">
+    <div class="panel-header">
+      <h2>👑 Super Admin — Stall Admin Management</h2>
+      <p>Monitor all registered stall admins, track stall assignments, and reset login codes when needed.</p>
+    </div>
+
+    <div class="admin-table-wrapper">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Registration #</th>
+            <th>Stall Name</th>
+            <th>Admin Name / Phone</th>
+            <th>Status</th>
+            <th>Registered At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminTableBody">
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   <!-- ═══════════════════════ KANBAN BOARD ═══════════════════════ -->
-  <main class="board-wrapper" aria-label="Order Kanban Board">
+  <main class="board-wrapper" id="kanbanBoardWrapper" aria-label="Order Kanban Board">
     <div class="kanban-board">
 
       <!-- PENDING column -->
@@ -161,6 +187,7 @@
     </div>
   </main>
 
+
   <!-- ═══════════════════════ OTP MODAL ═══════════════════════ -->
   <div class="modal-overlay hidden" id="otpModal" role="dialog" aria-modal="true" aria-labelledby="otpTitle">
     <div class="modal-card">
@@ -210,8 +237,32 @@
     </div>
   </div>
 
+  <!-- ═══════════════════════ RESET CODE MODAL ═══════════════════════ -->
+  <div class="modal-overlay hidden" id="resetCodeModal" role="dialog" aria-modal="true" aria-labelledby="resetCodeTitle">
+    <div class="modal-card">
+      <h2 class="modal-title" id="resetCodeTitle">🔑 New Login Code Generated</h2>
+      <p class="modal-sub">
+        A new login code has been generated for registration number <strong id="resetCodeRegNum"></strong> (<span id="resetCodeStall"></span>).
+      </p>
+      
+      <div class="credentials-box" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 1.5rem; text-align: center; margin: 1.5rem 0;">
+        <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.5rem;">New Login Code</div>
+        <div id="resetCodeDisplay" style="font-family: monospace; font-size: 1.8rem; font-weight: 700; color: #6366f1; letter-spacing: 2px;"></div>
+      </div>
+
+      <p class="modal-note" style="font-size: 0.85rem; color: #f59e0b; margin-bottom: 1.5rem; text-align: center;">
+        ⚠️ Please copy this code now. It will not be shown again!
+      </p>
+
+      <div class="modal-actions">
+        <button class="btn-primary-modal" id="resetCodeCloseBtn">Done & Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══════════════════════ TOAST CONTAINER ═══════════════════════ -->
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
 
   <!-- Scripts -->
   <script src="js/api.js"></script>

@@ -83,9 +83,12 @@ def create_order(
         total_amount += menu_item.current_price * item.quantity
         validated_items.append((item, menu_item))
 
+    stall_id = validated_items[0][1].stall_id if validated_items else None
+
     order = Order(
         order_number="TEMP",
         user_id=user_id,
+        stall_id=stall_id,
         pickup_slot_id=pickup_slot.id,
         total_amount=total_amount,
     )
@@ -361,10 +364,12 @@ def get_pending_orders_for_admin(
     """
     Retrieve all pending orders for the admin dashboard.
     If stall_id is provided, filter to that stall only.
+    If stall_id is None (Super Admin), return an empty list.
     """
     if stall_id is not None:
         return get_pending_orders_by_stall(db, stall_id)
-    return get_pending_orders(db)
+    return []
+
 
 def start_preparing_order(db: Session, order_id: int) -> Order:
     order = get_order_by_id(db, order_id)

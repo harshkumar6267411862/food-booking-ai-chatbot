@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
 from app.models.stall import FoodStall
-from app.schemas.auth import AdminRegisterResponse
+from app.schemas.auth import AdminRegisterResponse, StallAdminDetailResponse, ResetLoginCodeResponse
 from app.schemas.stall import FoodStallResponse
-from app.services.auth_service import get_current_admin, register_stall_admin
+from app.services.auth_service import get_current_admin, register_stall_admin, get_all_stall_admins, reset_admin_login_code
+
 
 router = APIRouter(
     prefix="/admin",
@@ -71,3 +72,49 @@ def register_admin(
         stall_name=stall_name,
         stall_id=stall_id,
     )
+
+
+@router.get(
+    "/list",
+    response_model=list[StallAdminDetailResponse],
+)
+def list_stall_admins(
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    """
+    Super Admin endpoint to list all stall admins and their stall details.
+    """
+    if current_admin.stall_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only Super Admin can access the admin list.",
+        )
+    return get_all_stall_admins(db)
+
+
+@router.post(
+    "/reset-login-code/{user_id}",
+    response_model=ResetLoginCodeResponse,
+)
+def reset_login_code(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    """
+    Super Admin endpoint to reset a stall admin's login code.
+    Returns the new login code for that admin.
+    """
+    if current_admin.stall_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only Super Admin can reset login codes.",
+        )
+    reg_number, new_code, stall_name = reset_admin_login_code(db, user_id)
+    return ResetLoginCodeResponse(
+        registration_number=reg_number,
+        new_login_code=new_code,
+        stall_name=stall_name,
+    )
+

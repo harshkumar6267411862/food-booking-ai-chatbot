@@ -113,3 +113,22 @@ class AdminProfileSetupRequest(BaseModel):
         pattern=r"^(?:\+91|91)?[6-9]\d{9}$",
         description="Indian mobile number (e.g. 9876543210)",
     )
+
+
+class StallAdminDetailResponse(BaseModel):
+    id: int
+    registration_number: str
+    name: str | None = None
+    phone_number: str | None = None
+    stall_id: int | None = None
+    stall_name: str | None = None
+    profile_complete: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ResetLoginCodeResponse(BaseModel):
+    registration_number: str
+    new_login_code: str
+    stall_name: str | None = None

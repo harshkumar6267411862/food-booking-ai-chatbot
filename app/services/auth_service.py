@@ -226,3 +226,58 @@ def complete_admin_profile(
     db.commit()
     db.refresh(user)
     return user
+
+
+def get_all_stall_admins(db: Session) -> list[dict]:
+    """
+    Retrieve all stall admin users with their associated stall name.
+    """
+    admins = (
+        db.query(User)
+        .filter(User.role == UserRole.ADMIN)
+        .order_by(User.id.desc())
+        .all()
+    )
+    result = []
+    for admin in admins:
+        stall_name = None
+        if admin.stall_id:
+            stall = db.query(FoodStall).filter(FoodStall.id == admin.stall_id).first()
+            if stall:
+                stall_name = stall.name
+        result.append({
+            "id": admin.id,
+            "registration_number": admin.registration_number,
+            "name": admin.name,
+            "phone_number": admin.phone_number,
+            "stall_id": admin.stall_id,
+            "stall_name": stall_name,
+            "profile_complete": admin.profile_complete,
+            "created_at": admin.created_at,
+        })
+    return result
+
+
+def reset_admin_login_code(db: Session, user_id: int) -> tuple[str, str, str | None]:
+    """
+    Reset a stall admin's login code (password) and return (registration_number, new_login_code, stall_name).
+    """
+    admin = db.query(User).filter(User.id == user_id, User.role == UserRole.ADMIN).first()
+    if not admin:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Stall admin with ID {user_id} not found.",
+        )
+
+    new_login_code = _generate_login_code()
+    admin.password_hash = hash_password(new_login_code)
+    db.commit()
+    db.refresh(admin)
+
+    stall_name = None
+    if admin.stall_id:
+        stall = db.query(FoodStall).filter(FoodStall.id == admin.stall_id).first()
+        if stall:
+            stall_name = stall.name
+
+    return admin.registration_number, new_login_code, stall_name

@@ -144,7 +144,13 @@ generatePickupSlots: (slotDate) =>
     }),
 
   getMyStall: () => apiFetch("/admin/profile/stall"),
+
+  getAllAdmins: () => apiFetch("/admin/list"),
+
+  resetAdminLoginCode: (userId) =>
+    apiFetch(`/admin/reset-login-code/${userId}`, { method: "POST" }),
 };
+
 
 // ── Formatting helpers ────────────────────────────────────────────────────────
 function formatTime(isoString) {

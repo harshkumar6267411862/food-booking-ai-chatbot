@@ -57,9 +57,20 @@ def setup_bot_data(db, monkeypatch):
         email="botadmin@test.com",
         phone_number="9876543299",
         password_hash=hash_password("Password1!"),
-        role=UserRole.ADMIN
+        role=UserRole.ADMIN,
+        stall_id=stall.id,
     )
     db.add(admin)
+
+    student = User(
+        registration_number="STU999999",
+        name="Test Student",
+        email="student@test.com",
+        phone_number="919876543210",
+        password_hash=hash_password("Password1!"),
+        role=UserRole.STUDENT,
+    )
+    db.add(student)
     db.commit()
 
     return {"stall": stall, "menu_item": item1, "slot": slot, "admin": admin}

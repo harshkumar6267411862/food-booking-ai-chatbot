@@ -35,7 +35,8 @@ def setup_data(db, monkeypatch):
         email="admin@test.com",
         phone_number="9876543211",
         password_hash=hash_password("Password1!"),
-        role=UserRole.ADMIN
+        role=UserRole.ADMIN,
+        stall_id=stall.id,
     )
     db.add(admin)
     db.commit()

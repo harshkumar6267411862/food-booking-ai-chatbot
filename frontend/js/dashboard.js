@@ -410,27 +410,112 @@ function enableCardButtons(id) {
   card.querySelectorAll(".btn-action").forEach((b) => (b.disabled = false));
 }
 
+// ── Reset Code Modal Handlers ─────────────────────────────────────────────
+const resetCodeModal = document.getElementById("resetCodeModal");
+const resetCodeCloseBtn = document.getElementById("resetCodeCloseBtn");
+if (resetCodeCloseBtn) {
+  resetCodeCloseBtn.addEventListener("click", () => {
+    if (resetCodeModal) resetCodeModal.classList.add("hidden");
+  });
+}
+
+async function handleResetAdminCode(userId, regNum, stallName) {
+  if (!confirm(`Are you sure you want to generate a new login code for ${regNum} (${stallName || 'Unassigned'})?`)) {
+    return;
+  }
+  try {
+    const res = await API.resetAdminLoginCode(userId);
+    document.getElementById("resetCodeRegNum").textContent = res.registration_number;
+    document.getElementById("resetCodeStall").textContent = res.stall_name || "Unassigned";
+    document.getElementById("resetCodeDisplay").textContent = res.new_login_code;
+    resetCodeModal.classList.remove("hidden");
+    toast(`Reset code generated for ${res.registration_number}`, "success");
+    loadSuperAdminPanel();
+  } catch (err) {
+    toast(err.message || "Failed to reset code", "error");
+  }
+}
+
+async function loadSuperAdminPanel() {
+  const tableBody = document.getElementById("adminTableBody");
+  if (!tableBody) return;
+  tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem;">Loading admin list...</td></tr>`;
+
+  try {
+    const admins = await API.getAllAdmins();
+    if (!admins || admins.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-secondary);">No registered stall admins found.</td></tr>`;
+      return;
+    }
+
+    tableBody.innerHTML = admins
+      .map(
+        (a) => `
+        <tr>
+          <td><strong style="font-family: monospace; color: var(--accent-primary);">${a.registration_number}</strong></td>
+          <td>${a.stall_name ? `🏪 <strong>${a.stall_name}</strong>` : '<span style="color: var(--text-muted);">Unassigned</span>'}</td>
+          <td>
+            <div><strong>${a.name || "Pending Setup"}</strong></div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">${a.phone_number || "-"}</div>
+          </td>
+          <td>
+            <span class="badge-status ${a.profile_complete ? "complete" : "pending"}">
+              ${a.profile_complete ? "Active" : "Setup Pending"}
+            </span>
+          </td>
+          <td style="font-size: 0.85rem; color: var(--text-secondary);">${new Date(a.created_at).toLocaleDateString("en-IN")}</td>
+          <td>
+            <button class="btn-reset-code" onclick="handleResetAdminCode(${a.id}, '${a.registration_number}', '${a.stall_name || ""}')">
+              🔑 Reset Login Code
+            </button>
+          </td>
+        </tr>
+      `
+      )
+      .join("");
+  } catch (err) {
+    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 2rem; color: var(--status-cancelled);">Error: ${err.message}</td></tr>`;
+  }
+}
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 (async () => {
-  // Render skeleton loaders initially
-  todayDateEl.textContent =
-    new Date().toLocaleDateString(
-        "en-IN",
-        {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        }
-    );
+  const isSuperAdmin = !Auth.getStallId();
 
-  Object.values(cols).forEach((col) => {
-    col.innerHTML = `
-      <div class="skeleton skeleton-card"></div>
-      <div class="skeleton skeleton-card"></div>`;
-  });
+  if (isSuperAdmin) {
+    // Hide Stall Admin UI elements
+    const opsPanel = document.querySelector(".operations-panel");
+    const statsBar = document.querySelector(".stats-bar");
+    const refreshBar = document.querySelector(".refresh-bar");
+    const boardWrapper = document.getElementById("kanbanBoardWrapper");
+    const superAdminPanel = document.getElementById("superAdminPanel");
 
-  await refresh();
+    if (opsPanel) opsPanel.style.display = "none";
+    if (statsBar) statsBar.style.display = "none";
+    if (refreshBar) refreshBar.style.display = "none";
+    if (boardWrapper) boardWrapper.style.display = "none";
 
-  // Auto-refresh every 30 seconds
-  STATE.pollingTimer = setInterval(() => refresh(), 30_000);
+    if (superAdminPanel) superAdminPanel.classList.remove("hidden");
+
+    loadSuperAdminPanel();
+  } else {
+    // Stall Admin Mode
+    todayDateEl.textContent = new Date().toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    Object.values(cols).forEach((col) => {
+      col.innerHTML = `
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>`;
+    });
+
+    await refresh();
+
+    // Auto-refresh every 30 seconds for Stall Admins
+    STATE.pollingTimer = setInterval(() => refresh(), 30_000);
+  }
 })();
+
