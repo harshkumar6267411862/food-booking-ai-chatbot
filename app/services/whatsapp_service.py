@@ -62,25 +62,23 @@ def _send_via_meta(to_phone: str, text: str):
         },
     }
 
-    print("=" * 80)
-    print("URL:", url)
-    print("Payload:", payload)
-    print("=" * 80)
-
-    response = requests.post(
-        url,
-        headers=headers,
-        json=payload,
-        timeout=10,
-    )
-
-    print("STATUS:", response.status_code)
-    print("BODY:", response.text)
-    print("=" * 80)
-
-    response.raise_for_status()
-
-    return response.json()
+    try:
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=10,
+        )
+        if response.status_code != 200:
+            logger.error(
+                f"[META WHATSAPP ERROR {response.status_code}]: {response.text}\n"
+                f"--> ACTION REQUIRED: Check/refresh WHATSAPP_TOKEN and WHATSAPP_PHONE_NUMBER_ID in your Render environment variables!"
+            )
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        logger.error(f"[META WHATSAPP FAILED] Could not deliver message to {to_phone}: {e}")
+        return {"status": "error", "detail": str(e)}
 
 def mark_message_as_read(message_id: str) -> dict:
     """

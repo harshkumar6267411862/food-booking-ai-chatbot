@@ -71,6 +71,14 @@
       window.location.href = "/admin-dashboard/index.html";
     }
 
+    // Prefill reg_number if passed in query param
+    const urlParams = new URLSearchParams(window.location.search);
+    const presetReg = urlParams.get("reg_num");
+    if (presetReg) {
+      document.getElementById("reg_number").value = presetReg;
+      document.getElementById("password").focus();
+    }
+
     const form    = document.getElementById("loginForm");
     const btn     = document.getElementById("loginBtn");
     const errBox  = document.getElementById("loginError");

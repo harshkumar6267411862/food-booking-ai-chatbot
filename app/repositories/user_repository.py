@@ -20,6 +20,12 @@ def create_user(db: Session, user: User,):
     return user
 
 def get_user_by_phone(db: Session, phone_number: str):
+    clean_digits = "".join(filter(str.isdigit, phone_number))
+    if len(clean_digits) >= 10:
+        suffix = clean_digits[-10:]
+        user = db.query(User).filter(User.phone_number.like(f"%{suffix}")).first()
+        if user:
+            return user
     return (
         db.query(User).filter(User.phone_number == phone_number).first()
     )

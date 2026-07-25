@@ -20,11 +20,10 @@ router = APIRouter(
 )
 def get_unassigned_stalls(
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin),
 ):
     """
     Return stalls that do not yet have an admin assigned.
-    Only accessible by existing admins.
+    Publicly accessible so new admins can select a stall to register.
     """
     # Find stall_ids already assigned to an admin
     assigned_stall_ids = (
@@ -51,10 +50,9 @@ def get_unassigned_stalls(
 def register_admin(
     stall_id: int,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin),
 ):
     """
-    Super-admin creates a new stall admin account.
+    Register a new admin account for an unassigned stall.
     Returns the auto-generated registration number and login code.
     """
     reg_number, plain_code, stall_name = register_stall_admin(db, stall_id)

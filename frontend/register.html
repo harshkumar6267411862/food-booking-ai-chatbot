@@ -93,14 +93,17 @@
 
   <script src="js/api.js"></script>
   <script>
-    Auth.requireAuth();
-    if (!Auth.getProfileComplete()) {
-      window.location.href = "/admin-dashboard/setup.html";
+    // Update navbar based on auth state
+    if (Auth.isLoggedIn()) {
+      document.getElementById("adminName").textContent = Auth.getAdminName();
+      document.getElementById("adminInitial").textContent = Auth.getAdminName().charAt(0).toUpperCase();
+      document.getElementById("logoutBtn").addEventListener("click", Auth.logout);
+    } else {
+      const navRight = document.querySelector(".nav-right");
+      if (navRight) {
+        navRight.innerHTML = `<a class="btn-logout" href="/admin-dashboard/login.html" style="text-decoration:none">Sign In</a>`;
+      }
     }
-
-    document.getElementById("adminName").textContent = Auth.getAdminName();
-    document.getElementById("adminInitial").textContent = Auth.getAdminName().charAt(0).toUpperCase();
-    document.getElementById("logoutBtn").addEventListener("click", Auth.logout);
 
     const grid       = document.getElementById("stallsGrid");
     const noMsg      = document.getElementById("noStallsMsg");
@@ -123,6 +126,8 @@
       });
     }
 
+    let createdRegNum = "";
+
     document.getElementById("copyRegNum").addEventListener("click", () => {
       copyToClipboard(document.getElementById("credRegNum").textContent, document.getElementById("copyRegNum"));
     });
@@ -130,11 +135,11 @@
       copyToClipboard(document.getElementById("credCode").textContent, document.getElementById("copyCode"));
     });
     document.getElementById("credDoneBtn").addEventListener("click", () => {
-      credModal.classList.add("hidden");
-      loadStalls(); // Refresh the list
+      window.location.href = `/admin-dashboard/login.html?reg_num=${encodeURIComponent(createdRegNum)}`;
     });
 
     function showCredentials(data) {
+      createdRegNum = data.registration_number;
       document.getElementById("credStall").textContent  = data.stall_name;
       document.getElementById("credRegNum").textContent = data.registration_number;
       document.getElementById("credCode").textContent   = data.login_code;
